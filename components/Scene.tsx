@@ -8,9 +8,9 @@ const Scene: React.FC = () => {
   const totalHours = timeLeft.days * 24 + timeLeft.hours;
   const pad = (n: number) => n.toString().padStart(2, '0');
   
-  // Compact Digital Clock Format: Reduced spacing as requested
-  // " : " (single spaces) instead of wide gaps
-  const countdownString = `${pad(totalHours)} : ${pad(timeLeft.minutes)} : ${pad(timeLeft.seconds)}`;
+  // Compact Digital Clock Format: Removed colons as requested
+  // Replaced " : " with spaces to eliminate the "glowing dots" between number groups
+  const countdownString = `${pad(totalHours)}   ${pad(timeLeft.minutes)}   ${pad(timeLeft.seconds)}`;
 
   // Color Palette
   const SILVER_BRIGHT = "#FFFFFF"; 
