@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense, useRef, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import Scene from './components/Scene';
@@ -19,9 +19,59 @@ const CameraRig = () => {
   return null;
 };
 
+// Component to prevent browser throttling by playing silent audio
+// This forces the browser to keep the tab active even when in background/OBS
+const KeepAlive = () => {
+  useEffect(() => {
+    const initAudio = () => {
+      try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContext) return;
+        
+        const ctx = new AudioContext();
+        // Create a silent oscillator
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        // Very low gain, effectively silent but keeps the audio thread active
+        gainNode.gain.value = 0.00001; 
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        oscillator.start();
+        
+        // Handle browser autoplay policies: resume on first user interaction if needed
+        if (ctx.state === 'suspended') {
+          const resume = () => {
+            ctx.resume();
+            // Remove listeners once resumed
+            window.removeEventListener('click', resume);
+            window.removeEventListener('keydown', resume);
+            window.removeEventListener('touchstart', resume);
+          };
+          
+          window.addEventListener('click', resume);
+          window.addEventListener('keydown', resume);
+          window.addEventListener('touchstart', resume);
+        }
+      } catch (e) {
+        console.error("KeepAlive audio initialization failed:", e);
+      }
+    };
+
+    initAudio();
+  }, []);
+  
+  return null;
+}
+
 const App: React.FC = () => {
   return (
     <div className="w-screen h-screen bg-black relative overflow-hidden">
+      {/* Invisible component to keep the rendering loop active in background */}
+      <KeepAlive />
+      
       <div className="absolute top-0 left-0 w-full h-full z-0">
         <Canvas camera={{ position: [0, 0, 20], fov: 45 }} dpr={[1, 2]}>
           <color attach="background" args={['#000000']} />
